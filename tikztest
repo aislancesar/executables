@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [[ -z ${2} ]]; then
+    echo '\documentclass{standalone} \usepackage[utf8]{inputenc} \usepackage{tikz} \begin{document} \input{'${1}'} \end{document}' >> tikz.tex ;
+    if pdflatex -halt-on-error tikz.tex ; then
+        evince tikz.pdf
+    else
+        notify-send 'TikzError' 'An error has ocurred while drawing TikzFigure.' --urgency=critical
+    fi
+elif [[ ${2} == '--png' ]]; then
+    echo '\documentclass[convert]{standalone} \usepackage[utf8]{inputenc} \usepackage{tikz} \begin{document} \input{'${1}'} \end{document}' >> tikz.tex ;
+    if pdflatex -halt-on-error -shell-escape tikz.tex ; then
+        if [[ -z ${3} ]]; then
+            mv tikz.png output.png
+        else
+            mv tikz.png ${3}'.png'
+        fi
+    else
+        notify-send 'TikzError' 'An error has ocurred while drawing TikzFigure.' --urgency=critical
+    fi
+else
+    echo 'Option is wrong!'
+    exit 1
+fi
+
+rm tikz.*

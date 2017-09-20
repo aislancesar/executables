@@ -1,0 +1,101 @@
+#!/bin/bash
+
+erase_auxiliar()
+{
+    rm -f *.aux ;
+    rm -f *.bbl ;
+    rm -f *.blg ;
+    rm -f *.log ;
+    echo "Auxiliar files were erased!"
+}
+
+if [[ -n ${5} ]]; then
+    echo "Too much arguments!" ;
+    exit
+fi
+
+if [[ ${1} = "-h" ]]; then
+    echo "Available commands:" ;
+    echo "    -s = Silent mode, not sending popup notifications." ;
+    echo "    -c = Compile, compiles the .tex file completely." ;
+    echo "    -f = FullCompile, erases all auxiliar files and compiles everything." ;
+    echo "    -x = Clean Folder, erases auxiliar files after compilation." ;
+    echo "    -e = Erase Only, just erases auxiliar files, without compilation." ;
+    echo "    -h = Help." ;
+    exit
+fi
+
+FILE="*.tex"
+SILENT=false
+TYPE=""
+CLEAR=false
+
+for i in ${1} ${2} ${3} ${4}
+do
+    if [[ -e $i ]]; then
+        if [[ "$FILE" = "*.tex" ]]; then
+            FILE=$i
+        else
+            echo "Too much file options, use just one!" ;
+            exit
+        fi
+    elif [[ $i = '-s' ]]; then
+        SILENT=true
+    elif [[ $i = '-c' ]]; then
+        TYPE="c"
+    elif [[ $i = '-f' ]]; then
+        TYPE="f"
+    elif [[ $i = '-x' ]]; then
+        CLEAR=true
+    elif [[ $i = '-e' ]]; then
+        erase_auxiliar ;
+        exit
+    fi
+done
+
+AUX=( $FILE )
+
+if [[ "$FILE" = "*.tex" && ${#AUX[@]} -ne 1 ]]; then
+    echo "Too much file options, use just one!" ;
+    exit
+fi
+
+if [[ $TYPE = "f" ]]; then
+    erase_auxiliar ;
+    rm -f *.pdf
+fi
+
+if [[ $TYPE = "f" || $TYPE = "c" ]]; then
+    if ! pdflatex -halt-on-error -draftmode $FILE ; then
+        if $SILENT; then
+            echo "Latex Compilation Error: Something went wrong in the compilation process."
+        else
+            notify-send 'Latex Compilation Error' 'Something went wrong in the compilation process.' --urgency=critical ;
+            exit
+        fi
+    fi
+
+    if ! bibtex *.aux ; then
+        if $SILENT; then
+            echo "Bibtex Compilation Error: Something went wrong in the compilation process."
+        else
+            notify-send 'Bibtex Compilation Error' 'Something went wrong in the compilation process.' --urgency=critical ;
+            exit
+        fi
+    fi
+
+    pdflatex -halt-on-error -draftmode $FILE
+fi
+
+pdflatex -halt-on-error $FILE
+
+if $CLEAR; then
+    echo $CLEAR ;
+    erase_auxiliar
+fi
+
+if $SILENT; then
+    echo "Latex Compilation Success: Tex file was succesfully compiled."
+else
+    notify-send 'Latex Compilation Success' 'Tex file was succesfully compiled.'
+fi

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [[ -z ${1} || -z ${2} ]]; then
+    echo 'Nothing happened!'
+elif [[ -e ${1} ]]; then
+    echo '\documentclass[preview, convert]{standalone} \usepackage[utf8]{inputenc} \usepackage{multirow} \usepackage{mathtools} \begin{document} \input{'${1}'} \end{document}' >> tab.tex ;
+    if pdflatex -halt-on-error -shell-escape tab.tex ; then
+        mv tab.png ${2}'.png'
+    else
+        notify-send 'TableError' 'An error has ocurred while drawing TablePicture.' --urgency=critical
+    fi
+else
+    echo 'File not found.'
+fi
+
+rm -f tab.*

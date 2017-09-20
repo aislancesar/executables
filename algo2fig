@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [[ -z ${1} || -z ${2} ]]; then
+    echo 'Nothing happened!'
+elif [[ -e ${1} ]]; then
+    echo '\documentclass[preview, convert]{standalone} \usepackage[utf8]{inputenc} \usepackage{algorithm2e} \usepackage{mathtools} \SetKwInput{Entrada}{Entrada} \SetKwInput{Saida}{Saída} \SetKwInput{Dados}{Dados} \SetKwInput{Resultado}{Resultado} \SetKw{Ate}{até} \SetKw{Retorna}{retorna} \SetKwBlock{Inicio}{início}{fim} \SetKwIF{Se}{SenaoSe}{Senao}{se}{ent\~ao}{sen\~ao se}{sen\~ao}{fim se} \SetKwSwitch{Selec}{Caso}{Outro}{selecione}{faça}{caso}{sen\~ao}{fim caso}{fim selec} \SetKwFor{Para}{para}{fa\c{c}a}{fim para} \SetKwFor{ParaPar}{para}{fa\c{c}a em paralelo}{fim para} \SetKwFor{ParaCada}{para cada}{fa\c{c}a}{fim para cada} \SetKwFor{ParaTodo}{para todo}{fa\c{c}a}{fim para todo} \SetKwFor{Enqto}{enquanto}{fa\c{c}a}{fim enqto} \SetKwRepeat{Repita}{repita}{até} \begin{document} \input{'${1}'} \end{document}' >> algo.tex ;
+    if pdflatex -halt-on-error -shell-escape algo.tex ; then
+        mv algo.png ${2}'.png'
+    else
+        notify-send 'AlgorithmError' 'An error has ocurred while drawing AlgorithmPicture.' --urgency=critical
+    fi
+else
+    echo 'File not found.'
+fi
+
+rm -f algo.*

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+if [[ -z ${1} || -z ${2} ]]; then
+    echo 'Nothing happened!'
+elif [[ -e ${1} ]]; then
+    echo 'Converting from file.'
+    echo '\documentclass[convert]{standalone} \usepackage[utf8]{inputenc} \usepackage{mathtools} \begin{document} $ \input{'${1}'} $ \end{document}' >> math.tex ;
+    if pdflatex -halt-on-error -shell-escape math.tex ; then
+        if [[ -z ${2} ]]; then
+            mv math.png ${1}'.png'
+        else
+            mv math.png ${2}'.png'
+        fi
+    else
+        notify-send 'MathError' 'An error has ocurred while drawing MathPicturre.' --urgency=critical
+    fi
+else
+    echo 'Converting from command line.'
+    # echo '\documentclass[convert]{standalone} \usepackage[utf8]{inputenc} \usepackage{amsmath} \begin{document} \begin{equation*} '${1}' \end{equation*} \end{document}' >> math.tex ;
+    echo '\documentclass[convert]{standalone} \usepackage[utf8]{inputenc} \usepackage{mathtools} \begin{document} $'${1}'$  \end{document}' >> math.tex ;
+    if pdflatex -halt-on-error -shell-escape math.tex ; then
+        if [[ -z ${2} ]]; then
+            mv math.png ${1}'.png'
+        else
+            mv math.png ${2}'.png'
+        fi
+    else
+        notify-send 'MathError' 'An error has ocurred while drawing MathPicturre.' --urgency=critical
+    fi
+fi
+
+rm -f math.*
