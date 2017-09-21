@@ -11,10 +11,10 @@ erase_auxiliar()
 
 control_c()
 {
-    kill $EVINCE ;
+    kill $EVINCE 2> /dev/null ;
     rm -f aux.* ;
-    rm show.pdf ;
-    echo -e "\e[1;31m\nFinalizing the looping compilation.\e[0m"
+    rm -f show.pdf ;
+    echo -e "\e[G\e[1;31mFinalizing the looping compilation.\e[0m"
     exit
 }
 
@@ -41,6 +41,7 @@ TYPE=""
 CLEAR=false
 LOOP=false
 LAST=""
+BLAST=""
 AUX=""
 EVINCE=""
 
@@ -81,7 +82,10 @@ if [[ "$FILE" = "*.tex" && ${#AUX[@]} -ne 1 ]]; then
 fi
 
 if $LOOP; then
-    if pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ; then
+    if pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ; then
+        bibtex aux.aux > /dev/null ;
+        pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ;
+        pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ;
         mv aux.pdf show.pdf ;
         evince show.pdf > /dev/null & 
         EVINCE=$!
@@ -90,6 +94,7 @@ if $LOOP; then
         exit
     fi
     LAST=$(stat -c%Y $FILE)
+    BLAST=$(stat -c%Y *.bib)
 
     trap control_c SIGINT
 
@@ -98,9 +103,28 @@ if $LOOP; then
     do
         sleep 1
         ACT=$(stat -c%Y $FILE)
-        if [[ $LAST -ne $ACT ]]; then
+        BACT=$(stat -c%Y *bib)
+
+        if ! ps $EVINCE > /dev/null ; then
+            control_c
+        fi
+
+        if [[ $BLAST -ne $BACT ]]; then
+            BLAST=$BACT
+            if pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ; then
+                echo "Refreshing bibliography." ;
+                bibtex aux.aux > /dev/null ;
+                pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ;
+                pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ;
+                mv aux.pdf show.pdf
+            else
+                echo "Compilation Error." ;
+            fi
+        elif [[ $LAST -ne $ACT ]]; then
             LAST=$ACT
-            if pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ; then
+            if pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ; then
+                echo "Compiling." ;
+                pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ;
                 mv aux.pdf show.pdf
             else
                 echo "Compilation Error." ;
