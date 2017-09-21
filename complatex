@@ -9,6 +9,15 @@ erase_auxiliar()
     echo "Auxiliar files were erased!"
 }
 
+control_c()
+{
+    kill $EVINCE ;
+    rm -f aux.* ;
+    rm show.pdf ;
+    echo -e "\e[1;31m\nFinalizing the looping compilation.\e[0m"
+    exit
+}
+
 if [[ -n ${5} ]]; then
     echo "Too much arguments!" ;
     exit
@@ -19,6 +28,7 @@ if [[ ${1} = "-h" ]]; then
     echo "    -s = Silent mode, not sending popup notifications." ;
     echo "    -c = Compile, compiles the .tex file completely." ;
     echo "    -f = FullCompile, erases all auxiliar files and compiles everything." ;
+    echo "    -l = Looping Compilation, keeps compiling the archive every time it is saved." ;
     echo "    -x = Clean Folder, erases auxiliar files after compilation." ;
     echo "    -e = Erase Only, just erases auxiliar files, without compilation." ;
     echo "    -h = Help." ;
@@ -29,6 +39,10 @@ FILE="*.tex"
 SILENT=false
 TYPE=""
 CLEAR=false
+LOOP=false
+LAST=""
+AUX=""
+EVINCE=""
 
 for i in ${1} ${2} ${3} ${4}
 do
@@ -50,14 +64,49 @@ do
     elif [[ $i = '-e' ]]; then
         erase_auxiliar ;
         exit
+    elif [[ $i = '-l' ]]; then
+        LOOP=true
     fi
 done
+
+if $LOOP && [[ $TYPE != "" ]]; then
+    echo "The looping option conflicts with the compiling option."
+fi
 
 AUX=( $FILE )
 
 if [[ "$FILE" = "*.tex" && ${#AUX[@]} -ne 1 ]]; then
     echo "Too much file options, use just one!" ;
     exit
+fi
+
+if $LOOP; then
+    if pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ; then
+        mv aux.pdf show.pdf ;
+        evince show.pdf > /dev/null & 
+        EVINCE=$!
+    else
+        echo "Compilation Error, try again." ;
+        exit
+    fi
+    LAST=$(stat -c%Y $FILE)
+
+    trap control_c SIGINT
+
+    echo -e "\e[1;36mRunning looping compilation.\e[0m"
+    while :
+    do
+        sleep 1
+        ACT=$(stat -c%Y $FILE)
+        if [[ $LAST -ne $ACT ]]; then
+            LAST=$ACT
+            if pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ; then
+                mv aux.pdf show.pdf
+            else
+                echo "Compilation Error." ;
+            fi
+        fi
+    done
 fi
 
 if [[ $TYPE = "f" ]]; then
