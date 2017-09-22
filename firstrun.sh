@@ -1,5 +1,23 @@
 #!/bin/bash
 
+echo -e "\n\e[1;35m    -=  THIS IS THE FIRST RUN PROGRAM =-"
+echo "Insert M for Master computer or S for Slave."
+read MASTER
+while [[ $MASTER != 'M' && $MASTER != 'S' ]] ; then
+do
+    echo -e "\e[31mInserted $MASTER."
+    echo "Insert M for Master computer or S for Slave."
+    read MASTER
+done
+
+if [[ $MASTER = 'M' ]] ; then
+    echo "Master computer activated."
+    MASTER=true
+else
+    echo "Slave computer activated."
+    MASTER=false
+fi
+
 mkdir build
 cd build
 
@@ -91,6 +109,22 @@ if wget https://release.gitkraken.com/linux/gitkraken-amd64.deb && dpkg -i gitkr
     KRAKEN=true
 fi
 
+if !$MASTER ; then
+    OPEN=false
+    echo "Installing OpenSSH."
+    if sudo apt install openssh-server ; then
+        echo "OpenSSH was installed."
+        OPEN=true
+    fi
+
+    GLANCES=false
+    echo "Installing Glances."
+    if sudo apt install python-pip build-essential python-dev && sudo pip install Glances && sudo pip install PySensors ; then
+        echo "Glances was installed."
+        GLANCES=false
+    fi
+fi
+
 TEXLIVE=false
 FONTS=false
 echo "Installing Texlive."
@@ -150,6 +184,14 @@ if ! $KRAKEN ; then
     echo "    Gitkraken."
 fi
 
+if ! $MASTER && ! $OPEN ; then
+    echo "    OpenSSH."
+fi
+
+if ! $MASTER && ! $GLANCES ; then
+    echo "    Glances."
+fi
+
 if ! $TEXLIVE ; then
     echo "    Texlive."
 elif ! $FONTS ; then
@@ -167,5 +209,6 @@ echo "        System Monitor,"
 echo "        TopIcons Plus,"
 echo "        User Themes and"
 echo "        windowNavigator."
+echo "    Configure SSH key."
 echo "    Reboot the computer."
 echo "    Type sudo visudo on terminal and add /opt/texbin to the line >>> Defaults."
