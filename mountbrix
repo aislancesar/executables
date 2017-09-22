@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if fusermount -u /home/aislan/brix/ 2> /dev/null; then
+    echo "Unmounted Brix folder."
+    exit
+fi
+
+if ssh -q -o ConnectTimeout=1 aislan@192.168.73.3 exit && sshfs aislan@192.168.73.3:/home/aislan /home/aislan/brix ; then
+    echo "Mounted Brix in home folder."
+else
+    echo -e "\e[1;31mError ocurred while mounting. Verify if brix is correctly connected."
+fi

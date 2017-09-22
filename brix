@@ -1,0 +1,5 @@
+#!/bin/bash
+
+if ! ssh -Y -o ConnectTimeout=1 aislan@192.168.73.3 ; then
+    echo -e "\e[1;31mConnection to brix was refused!"
+fi
