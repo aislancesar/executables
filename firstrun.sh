@@ -29,7 +29,7 @@ mv * ~/.local/bin # Move binaries
 cp bashrc ~/.bashrc # Copy terminal things
 cp git-* ~/
 
-sudo chmod 777 !(.git|*.*) # Give permission to all binaries
+sudo chmod 777 !(.git*|*.*) # Give permission to all binaries
 
 # Install programs
 TELEGRAM=false
