@@ -6,6 +6,11 @@ erase_auxiliar()
     rm -f *.bbl ;
     rm -f *.blg ;
     rm -f *.log ;
+    rm -f *.brf ;
+    rm -f *.idx ;
+    rm -f *.lof ;
+    rm -f *.lot ;
+    rm -f *.toc ;
     echo "Auxiliar files were erased!"
 }
 
