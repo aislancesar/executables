@@ -87,15 +87,21 @@ if [[ "$FILE" = "*.tex" && ${#AUX[@]} -ne 1 ]]; then
 fi
 
 if $LOOP; then
+    echo -e "\e[0mCompiling!"
     if pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ; then
-        bibtex aux.aux > /dev/null ;
+        echo -e "\e[F\e[2KCompiling!!"
+        if ! bibtex aux.aux > /dev/null ; then
+            echo -e "\e[F\e[2K\e[1;31mError compiling bibtex" ;
+        fi
         pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ;
+        echo -e "\e[F\e[2KCompiling!!!"
         pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ;
         mv aux.pdf show.pdf ;
+        echo -e "\e[F\e[2K\e[1;36mCompiled!"
         evince show.pdf > /dev/null & 
         EVINCE=$!
     else
-        echo "Compilation Error, try again." ;
+        echo -e "\e[F\e[2K\e[1;31mCompilation Error, try again." ;
         exit
     fi
     LAST=$(stat -c%Y $FILE txt/* *.bib)
@@ -113,15 +119,20 @@ if $LOOP; then
         fi
 
         if [[ $LAST -ne $ACT ]]; then
-            LAST=$ACT
+            echo -e "\e[0mCompiling!" ;
+            LAST=$ACT ;
             if pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ; then
-                echo "Refreshing bibliography." ;
-                bibtex aux.aux > /dev/null ;
+                echo -e "\e[F\e[2KCompiling!!" ;
+                if ! bibtex aux.aux > /dev/null ; then
+                    echo -e "\e[F\e[2K\e[1;31mError compiling bibtex"
+                fi
                 pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ;
+                echo -e "\e[F\e[2KCompiling!!!" ;
                 pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ;
-                mv aux.pdf show.pdf
+                mv aux.pdf show.pdf ;
+                echo -e "\e[F\e[2K\e[1;36mCompiled!"
             else
-                echo "Compilation Error." ;
+                echo -e "\e[F\e[2K\e[1;31mCompilation Error!"
             fi
         fi
     done
