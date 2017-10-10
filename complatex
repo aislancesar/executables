@@ -98,8 +98,7 @@ if $LOOP; then
         echo "Compilation Error, try again." ;
         exit
     fi
-    LAST=$(stat -c%Y $FILE)
-    BLAST=$(stat -c%Y *.bib)
+    LAST=$(stat -c%Y $FILE txt/* *.bib)
 
     trap control_c SIGINT
 
@@ -107,28 +106,18 @@ if $LOOP; then
     while :
     do
         sleep 1
-        ACT=$(stat -c%Y $FILE)
-        BACT=$(stat -c%Y *bib)
+        ACT=$(stat -c%Y $FILE txt/* *.bib)
 
         if ! ps $EVINCE > /dev/null ; then
             control_c
         fi
 
-        if [[ $BLAST -ne $BACT ]]; then
-            BLAST=$BACT
+        if [[ $LAST -ne $ACT ]]; then
+            LAST=$ACT
             if pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ; then
                 echo "Refreshing bibliography." ;
                 bibtex aux.aux > /dev/null ;
                 pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ;
-                pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ;
-                mv aux.pdf show.pdf
-            else
-                echo "Compilation Error." ;
-            fi
-        elif [[ $LAST -ne $ACT ]]; then
-            LAST=$ACT
-            if pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ; then
-                echo "Compiling." ;
                 pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ;
                 mv aux.pdf show.pdf
             else
