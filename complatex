@@ -113,11 +113,11 @@ if $LOOP; then
         exit
     fi
     
-    if [[ -e $FILE && -e txt/* && -e *.bib ]]; then
+    if [ -e $FILE ] && [ -e txt/* ] && [ -e *.bib ]; then
         LAST=$(stat -c%Y $FILE txt/* *.bib)
-    elif [[ -e $FILE && -e txt/* ]]; then
+    elif [ -e $FILE ] && [ -e txt/* ]; then
         LAST=$(stat -c%Y $FILE txt/*)
-    elif [[ -e $FILE && -e *.bib ]]; then
+    elif [ -e $FILE ] && [ -e *.bib ]; then
         LAST=$(stat -c%Y $FILE *.bib)
     elif [ -e $FILE ]; then
         LAST=$(stat -c%Y $FILE)
@@ -130,11 +130,11 @@ if $LOOP; then
     do
         sleep 1
         
-        if [[ -e $FILE && -e txt/* && -e *.bib ]]; then
+        if [ -e $FILE ] && [ -e txt/* ] && [ -e *.bib ]; then
             ACT=$(stat -c%Y $FILE txt/* *.bib)
-        elif [[ -e $FILE && -e txt/* ]]; then
+        elif [ -e $FILE ] && [ -e txt/* ]; then
             ACT=$(stat -c%Y $FILE txt/*)
-        elif [[ -e $FILE && -e *.bib ]]; then
+        elif [ -e $FILE ] && [ -e *.bib ]; then
             ACT=$(stat -c%Y $FILE *.bib)
         elif [ -e $FILE ]; then
             ACT=$(stat -c%Y $FILE)
@@ -144,7 +144,7 @@ if $LOOP; then
             control_c
         fi
 
-        if [[ $LAST -ne $ACT ]] 2> /dev/null; then
+        if [[ $LAST != $ACT ]]; then
             echo -e "\e[0mCompiling!" ;
             LAST=$ACT ;
             if pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ; then
