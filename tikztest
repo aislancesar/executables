@@ -1,6 +1,11 @@
 #!/bin/bash
-
-if [[ -z ${2} ]]; then
+if [[ ${1} == '-h' ]]; then
+    echo '>>> tikztest file.tex'
+    echo 'Compiles the tikz and shows a preview.'
+    echo ''
+    echo '>>> tikztest file.tex --png figname'
+    echo 'Compiles the tikz and saves to a picture named figname.'
+elif [[ -z ${2} ]]; then
     echo '\documentclass{standalone} \usepackage[utf8]{inputenc} \usepackage{tikz} \begin{document} \input{'${1}'} \end{document}' >> tikz.tex ;
     if pdflatex -halt-on-error tikz.tex 1> /dev/null ; then
         evince tikz.pdf
@@ -18,12 +23,6 @@ elif [[ ${2} == '--png' ]]; then
     else
         notify-send 'TikzError' 'An error has ocurred while drawing TikzFigure.' --urgency=critical
     fi
-elif [[ ${1} == '-h' ]]; then
-    echo '>>> tikztest file.tex'
-    echo 'Compiles the tikz and shows a preview.'
-    echo ''
-    echo '>>> tikztest file.tex --png figname'
-    echo 'Compiles the tikz and saves to a picture named figname.'
 else
     echo 'Option is wrong!'
     exit 1
