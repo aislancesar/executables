@@ -1,11 +1,22 @@
 #!/bin/bash
+control_c()
+{
+    kill $EVINCE 2> /dev/null ;
+    rm -f tikz.*
+    echo -e "\e[G\e[1;31mFinalizing the looping compilation.\e[0m"
+    exit
+}
+
 if [[ ${1} == '-h' ]]; then
     echo
     echo '>>> tikztest file.tex'
     echo 'Compiles the tikz and shows a preview.'
-    echo ''
+    echo 
     echo '>>> tikztest file.tex --png figname'
     echo 'Compiles the tikz and saves to a picture named figname.'
+    echo 
+    echo '>>> tikztest -l file.tex'
+    echo 'Compiles the tikz in loop and shows the preview.'
     echo
 elif [[ -z ${2} ]]; then
     echo '\documentclass{standalone} \usepackage[utf8]{inputenc} \usepackage{tikz} \begin{document} \input{'${1}'} \end{document}' >> tikz.tex ;
@@ -25,6 +36,47 @@ elif [[ ${2} == '--png' ]]; then
     else
         notify-send 'TikzError' 'An error has ocurred while drawing TikzFigure.' --urgency=critical
     fi
+elif [[ ${1} == '-l' && -e ${2} ]]; then
+    EVINCE=""
+    LAST=""
+    ACT=""
+
+    trap control_c SIGINT
+
+    echo -e '\e[0mStarting loop build.'
+    echo '\documentclass{standalone} \usepackage[utf8]{inputenc} \usepackage{tikz} \begin{document} \input{'${2}'} \end{document}' >> tikz.tex ;
+    if pdflatex -halt-on-error tikz.tex > /dev/null ; then
+        evince tikz.pdf > /dev/null &
+        EVINCE=$! ;
+        echo -e "\e[F\e[2K\e[1;36mCompiled!"
+    else
+        echo -e '\e[F\e[2K\e[1;31mCompilation Error, try again.' ;
+        control_c ;
+        exit
+    fi
+
+    LAST=$(stat -c%Y ${2})
+
+    echo -e "\e[F\e[2K\e[1;36mRunning looping compilation.\e[0m"
+    while :
+    do
+        sleep 1
+        ACT=$(stat -c%Y ${2})
+        if ! ps $EVINCE > /dev/null ; then
+            control_c
+        fi
+
+        if [[ $LAST != $ACT ]]; then
+            echo -e "\e[0mCompiling!" ;
+            LAST=$ACT ;
+            echo '\documentclass{standalone} \usepackage[utf8]{inputenc} \usepackage{tikz} \begin{document} \input{'${2}'} \end{document}' >> tikz.tex ;
+            if pdflatex -halt-on-error tikz.tex > /dev/null ; then
+                echo -e "\e[F\e[2K\e[1;36mCompiled!"
+            else
+                echo -e '\e[F\e[2K\e[1;31mCompilation Error, try again.' ;
+            fi
+        fi
+    done
 else
     echo 'Option is wrong!'
     exit 1
