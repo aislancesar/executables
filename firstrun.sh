@@ -109,6 +109,13 @@ if wget https://release.gitkraken.com/linux/gitkraken-amd64.deb && dpkg -i gitkr
     KRAKEN=true
 fi
 
+PAP=false
+echo "Installing Paprefs."
+if sudo apt install -y paprefs ; then
+    echo "Paprefs was installed."
+    PAP=true
+fi
+
 if !$MASTER ; then
     OPEN=false
     echo "Installing OpenSSH."
@@ -184,6 +191,10 @@ if ! $KRAKEN ; then
     echo "    Gitkraken."
 fi
 
+if ! $PAP ; then
+    echo "    Paprefs."
+fi
+
 if ! $MASTER && ! $OPEN ; then
     echo "    OpenSSH."
 fi
@@ -212,3 +223,4 @@ echo "        windowNavigator."
 echo "    Configure SSH key."
 echo "    Reboot the computer."
 echo "    Type sudo visudo on terminal and add /opt/texbin to the line >>> Defaults."
+echo "    Edit paprefs in the computer in order to do Audio forwarding."

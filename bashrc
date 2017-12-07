@@ -130,3 +130,8 @@ export GIT_PS1_SHOWDIRTYSTATE=1
 # '\$(__git_ps1)' adds git-related stuff
 # '\W' adds the name of the current directory
 export PS1="$green\u@\h$cyan\$(__git_ps1)$blue \W $ $green"
+
+# Used to forward audio through ssh connection.
+if [[ -n $SSH_CLIENT ]]; then
+  export PULSE_SERVER=192.168.73.7
+fi
