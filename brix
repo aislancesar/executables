@@ -1,7 +1,5 @@
 #!/bin/bash
 
-if [[ -z ${1} ]] && ! ssh -Y -o ConnectTimeout=1 aislan@192.168.73.3 ; then
-    echo -e "\e[1;31mConnection to brix was refused!"
-elif ssh -Y -o ConnectTimeout=1 aislan@192.168.73.3 ${1} > /dev/null ; then
+if ! ssh -Y -o ConnectTimeout=1 aislan@192.168.73.3 ; then
     echo -e "\e[1;31mConnection to brix was refused!"
 fi
