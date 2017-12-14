@@ -1,0 +1,6 @@
+#!/bin/bash
+
+if ! [[ -z ${1} ]] ; then
+    ${1} 2> /dev/null &
+    echo -e "\e[0mThe PID of \e[1m${1}\e[0m is \e[1m[$!]\e[0m."
+fi
