@@ -113,11 +113,11 @@ if $LOOP; then
         exit
     fi
     
-    if [ -e $FILE ] && ls txt/* && ls *.bib; then
+    if [ -e $FILE ] && ls txt/* &> /dev/null && ls *.bib &> /dev/null; then
         LAST=$(stat -c%Y $FILE txt/* *.bib)
-    elif [ -e $FILE ] && ls txt/*; then
+    elif [ -e $FILE ] && ls txt/* &> /dev/null; then
         LAST=$(stat -c%Y $FILE txt/*)
-    elif [ -e $FILE ] && ls *.bib; then
+    elif [ -e $FILE ] && ls *.bib &> /dev/null; then
         LAST=$(stat -c%Y $FILE *.bib)
     elif [ -e $FILE ]; then
         LAST=$(stat -c%Y $FILE)
@@ -130,11 +130,11 @@ if $LOOP; then
     do
         sleep 1
         
-        if [ -e $FILE ] && ls txt/* && ls *.bib; then
+        if [ -e $FILE ] && ls txt/* &> /dev/null && ls *.bib &> /dev/null; then
             ACT=$(stat -c%Y $FILE txt/* *.bib)
-        elif [ -e $FILE ] && ls txt/*; then
+        elif [ -e $FILE ] && ls txt/* &> /dev/null; then
             ACT=$(stat -c%Y $FILE txt/*)
-        elif [ -e $FILE ] && ls *.bib; then
+        elif [ -e $FILE ] && ls *.bib &> /dev/null; then
             ACT=$(stat -c%Y $FILE *.bib)
         elif [ -e $FILE ]; then
             ACT=$(stat -c%Y $FILE)
