@@ -128,8 +128,15 @@ if !$MASTER ; then
     echo "Installing Glances."
     if sudo apt install python-pip build-essential python-dev && sudo pip install Glances && sudo pip install PySensors ; then
         echo "Glances was installed."
-        GLANCES=false
+        GLANCES=true
     fi
+fi
+
+JUPYTER=false
+echo "Installing Jupyter."
+if sudo pip install jupyter ; then
+    echo "Jupyter was installed."
+    JUPYTER=true
 fi
 
 TEXLIVE=false
@@ -201,6 +208,10 @@ fi
 
 if ! $MASTER && ! $GLANCES ; then
     echo "    Glances."
+fi
+
+if ! JUPYTER ; then
+    echo "    Jupyter."
 fi
 
 if ! $TEXLIVE ; then
