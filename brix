@@ -1,8 +1,11 @@
 #!/bin/bash
-if [[ -z ${1} ]] ; then
-    if ! ssh -Y -o ConnectTimeout=1 aislan@192.168.73.3 '${1} &' ; then
-        echo -e "\e[1;31mError executing \e[1;30m${1}\e[1;31m on brix!"
+
+if ! [[ -z ${1} ]] ; then
+    GT="gnome-terminal --command='${1}'"
+    echo $GT
+    if ! ssh -fY -o ConnectTimeout=1 aislan@192.168.73.3 $GT ; then
+        echo -e "\e[1;31mError executing \e[1;33m${1}\e[1;31m on brix!\e[0m"
     fi
-elif ! ssh -Y -o ConnectTimeout=1 aislan@192.168.73.3 ; then
+elif ! ( ssh -Y -o ConnectTimeout=1 aislan@192.168.73.3 && echo -e "\e[1;34mClosed connection!\e[1;31m" ) ; then
     echo -e "\e[1;31mConnection to brix was refused!"
 fi
