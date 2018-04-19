@@ -1,6 +1,29 @@
 #!/bin/bash
 
-if ! [[ -z ${1} ]] ; then
-    ${1} 2> /dev/null &
+if [[ ${1} = '-e' ]] ; then
+    if ! [[ -z ${2} ]] ; then
+        ${2} 2> /dev/null &
+        echo -e "\e[0mThe PID of \e[1m${2}\e[0m is \e[1m[$!]\e[0m."
+    else
+        echo -e "\e[31mNo command given!\e[0m"
+    fi
+elif [[ ${1} = '-o' ]] ; then
+    if ! [[ -z ${2} ]] ; then
+        ${2} > /dev/null &
+        echo -e "\e[0mThe PID of \e[1m${2}\e[0m is \e[1m[$!]\e[0m."
+    else
+        echo -e "\e[31mNo command given!\e[0m"
+    fi
+elif [[ ${1} = '-a' ]] ; then
+    if ! [[ -z ${2} ]] ; then
+        ${2} &> /dev/null &
+        echo -e "\e[0mThe PID of \e[1m${2}\e[0m is \e[1m[$!]\e[0m."
+    else
+        echo -e "\e[31mNo command given!\e[0m"
+    fi
+elif ! [[ -z ${1} ]] ; then
+    ${1} &
     echo -e "\e[0mThe PID of \e[1m${1}\e[0m is \e[1m[$!]\e[0m."
+else
+    echo -e "\e[31mSome error has ocurred.\e[0m"
 fi
