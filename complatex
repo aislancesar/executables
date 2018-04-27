@@ -90,11 +90,20 @@ if $LOOP; then
     echo -e "\e[0mCompiling!"
     if pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ; then
         echo -e "\e[F\e[2K\e[0mCompiling!!"
-        if ! bibtex aux.aux > /dev/null ; then
-            echo -e "\e[F\e[2K\e[1;31mError compiling bibtex\n" ;
-            rm -f aux.* ;
-            pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null 
+        if ! biber aux.aux > /dev/null ; then
+            echo -e "\e[F\e[2K\e[1;31mError compiling biber, changing to bibtex.\n"
+            if ! bibtex aux.aux > /dev/null ; then
+                echo -e "\e[F\e[2K\e[1;31mError compiling bibtex\n" ;
+                rm -f aux.* ;
+                pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null 
+                BIB='neither'
+            else
+                BIB='bibtex'
+            fi
+        else
+            BIB='biber'
         fi
+
         pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ;
         echo -e "\e[F\e[2K\e[0mCompiling!!!"
         pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ;
@@ -149,11 +158,35 @@ if $LOOP; then
             LAST=$ACT ;
             if pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ; then
                 echo -e "\e[F\e[2K\e[0mCompiling!!" ;
-                if ! bibtex aux.aux > /dev/null ; then
-                    echo -e "\e[F\e[2K\e[1;31mError compiling bibtex\n" ;
-                    rm -f aux.* ;
-                    pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null 
+                
+                if [[ $BIB == 'bibtex' ]] ; then
+                    if ! bibtex aux.aux > /dev/null ; then
+                        echo -e "\e[F\e[2K\e[1;31mError compiling bibtex\n" ;
+                        rm -f aux.* ;
+                        pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null 
+                    fi
+                elif [[ $BIB == 'biber' ]]; then
+                    if ! biber aux.aux > /dev/null ; then
+                        echo -e "\e[F\e[2K\e[1;31mError compiling biber\n" ;
+                        rm -f aux.* ;
+                        pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null 
+                    fi
+                else
+                    if ! biber aux.aux > /dev/null ; then
+                        echo -e "\e[F\e[2K\e[1;31mError compiling biber, changing to bibtex.\n"
+                        if ! bibtex aux.aux > /dev/null ; then
+                            echo -e "\e[F\e[2K\e[1;31mError compiling bibtex\n" ;
+                            rm -f aux.* ;
+                            pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null 
+                            BIB='neither'
+                        else
+                            BIB='bibtex'
+                        fi
+                    else
+                        BIB='biber'
+                    fi
                 fi
+
                 pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ;
                 echo -e "\e[F\e[2K\e[0mCompiling!!!" ;
                 pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ;
@@ -184,12 +217,14 @@ if [[ $TYPE = "f" || $TYPE = "c" ]]; then
         fi
     fi
 
-    if ! bibtex *.aux ; then
-        if $SILENT; then
-            echo "Bibtex Compilation Error: Something went wrong in the compilation process."
-        else
-            notify-send 'Bibtex Compilation Error' 'Something went wrong in the compilation process.' --urgency=critical ;
-            exit
+    if ! biber *.aux ; then
+        if ! bibtex *.aux ; then
+            if $SILENT; then
+                echo "Bibtex Compilation Error: Something went wrong in the compilation process."
+            else
+                notify-send 'Bibtex Compilation Error' 'Something went wrong in the compilation process.' --urgency=critical ;
+                exit
+            fi
         fi
     fi
 
