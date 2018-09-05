@@ -5,18 +5,20 @@ erase_auxiliar()
     rm -f *.aux ;
     rm -f *.bbl ;
     rm -f *.blg ;
-    rm -f *.log ;
     rm -f *.brf ;
     rm -f *.idx ;
     rm -f *.lof ;
+    rm -f *.log ;
     rm -f *.lot ;
     rm -f *.toc ;
+    rm -f *.fdb_latexmk ;
+    rm -f *.fls ;
     echo "Auxiliar files were erased!"
 }
 
 control_c()
 {
-    kill $EVINCE 2> /dev/null ;
+    kill $OKULAR 2> /dev/null ;
     rm -f aux.* ;
     rm -f show.pdf ;
     echo -e "\e[G\e[1;31mFinalizing the looping compilation.\e[0m"
@@ -30,25 +32,21 @@ fi
 
 if [[ ${1} = "-h" ]]; then
     echo "Available commands:" ;
-    echo "    -s = Silent mode, not sending popup notifications." ;
-    echo "    -c = Compile, compiles the .tex file completely." ;
     echo "    -f = FullCompile, erases all auxiliar files and compiles everything." ;
     echo "    -l = Looping Compilation, keeps compiling the archive every time it is saved." ;
-    echo "    -x = Clean Folder, erases auxiliar files after compilation." ;
     echo "    -e = Erase Only, just erases auxiliar files, without compilation." ;
     echo "    -h = Help." ;
     exit
 fi
 
 FILE="*.tex"
-SILENT=false
 TYPE=""
-CLEAR=false
 LOOP=false
 LAST=""
 BLAST=""
 AUX=""
-EVINCE=""
+OKULAR=""
+CLEAR=false
 
 for i in ${1} ${2} ${3} ${4}
 do
@@ -59,13 +57,8 @@ do
             echo "Too much file options, use just one!" ;
             exit
         fi
-    elif [[ $i = '-s' ]]; then
-        SILENT=true
-    elif [[ $i = '-c' ]]; then
-        TYPE="c"
     elif [[ $i = '-f' ]]; then
         TYPE="f"
-    elif [[ $i = '-x' ]]; then
         CLEAR=true
     elif [[ $i = '-e' ]]; then
         erase_auxiliar ;
@@ -88,29 +81,11 @@ fi
 
 if $LOOP; then
     echo -e "\e[0mCompiling!"
-    if pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ; then
-        echo -e "\e[F\e[2K\e[0mCompiling!!"
-        if ! biber aux.aux > /dev/null ; then
-            echo -e "\e[F\e[2K\e[1;31mError compiling biber, changing to bibtex.\n"
-            if ! bibtex aux.aux > /dev/null ; then
-                echo -e "\e[F\e[2K\e[1;31mError compiling bibtex\n" ;
-                rm -f aux.* ;
-                pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null 
-                BIB='neither'
-            else
-                BIB='bibtex'
-            fi
-        else
-            BIB='biber'
-        fi
-
-        pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ;
-        echo -e "\e[F\e[2K\e[0mCompiling!!!"
-        pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ;
+    if latexmk -pdf -halt-on-error -jobname=aux $FILE &> /dev/null ; then
         if mv aux.pdf show.pdf ; then
             echo -e "\e[F\e[2K\e[1;36mCompiled!" ;
-            evince show.pdf > /dev/null & 
-            EVINCE=$!
+            okular show.pdf > /dev/null & 
+            OKULAR=$!
         else
             echo -e "\e[F\e[2K\e[1;31mCompilation Error, try again." ;
             control_c
@@ -149,54 +124,21 @@ if $LOOP; then
             ACT=$(stat -c%Y $FILE)
         fi
 
-        if ! ps $EVINCE > /dev/null ; then
+        if ! ps $OKULAR > /dev/null ; then
             control_c
         fi
 
         if [[ $LAST != $ACT ]]; then
-            echo -e "\e[0mCompiling!" ;
+            echo -e "\e[0mCompiling!"
             LAST=$ACT ;
-            if pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ; then
-                echo -e "\e[F\e[2K\e[0mCompiling!!" ;
-                
-                if [[ $BIB == 'bibtex' ]] ; then
-                    if ! bibtex aux.aux > /dev/null ; then
-                        echo -e "\e[F\e[2K\e[1;31mError compiling bibtex\n" ;
-                        rm -f aux.* ;
-                        pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null 
-                    fi
-                elif [[ $BIB == 'biber' ]]; then
-                    if ! biber aux.aux > /dev/null ; then
-                        echo -e "\e[F\e[2K\e[1;31mError compiling biber\n" ;
-                        rm -f aux.* ;
-                        pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null 
-                    fi
-                else
-                    if ! biber aux.aux > /dev/null ; then
-                        echo -e "\e[F\e[2K\e[1;31mError compiling biber, changing to bibtex.\n"
-                        if ! bibtex aux.aux > /dev/null ; then
-                            echo -e "\e[F\e[2K\e[1;31mError compiling bibtex\n" ;
-                            rm -f aux.* ;
-                            pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null 
-                            BIB='neither'
-                        else
-                            BIB='bibtex'
-                        fi
-                    else
-                        BIB='biber'
-                    fi
-                fi
-
-                pdflatex -halt-on-error -jobname=aux -draftmode $FILE > /dev/null ;
-                echo -e "\e[F\e[2K\e[0mCompiling!!!" ;
-                pdflatex -halt-on-error -jobname=aux $FILE > /dev/null ;
-                if mv aux.pdf show.pdf 2> /dev/null ; then
+            if latexmk -pdf -halt-on-error -jobname=aux $FILE &> /dev/null ; then
+                if mv aux.pdf show.pdf ; then
                     echo -e "\e[F\e[2K\e[1;36mCompiled!" ;
                 else
-                    echo -e "\e[F\e[2K\e[1;31mCompilation Error!"
+                    echo -e "\e[F\e[2K\e[1;31mCompilation Error, try again." ;
                 fi
             else
-                echo -e "\e[F\e[2K\e[1;31mCompilation Error!"
+                echo -e "\e[F\e[2K\e[1;31mCompilation Error, try again." ;
             fi
         fi
     done
@@ -207,39 +149,12 @@ if [[ $TYPE = "f" ]]; then
     rm -f *.pdf
 fi
 
-if [[ $TYPE = "f" || $TYPE = "c" ]]; then
-    if ! pdflatex -halt-on-error -draftmode $FILE ; then
-        if $SILENT; then
-            echo "Latex Compilation Error: Something went wrong in the compilation process."
-        else
-            notify-send 'Latex Compilation Error' 'Something went wrong in the compilation process.' --urgency=critical ;
-            exit
-        fi
-    fi
-
-    if ! biber *.aux ; then
-        if ! bibtex *.aux ; then
-            if $SILENT; then
-                echo "Bibtex Compilation Error: Something went wrong in the compilation process."
-            else
-                notify-send 'Bibtex Compilation Error' 'Something went wrong in the compilation process.' --urgency=critical ;
-                exit
-            fi
-        fi
-    fi
-
-    pdflatex -halt-on-error -draftmode $FILE
+if ! latexmk -pdf -halt-on-error $FILE ; then
+    echo "Latex Compilation Error: Something went wrong in the compilation process."
+else
+    echo "Latex Compilation Success: Tex file was succesfully compiled."
 fi
-
-pdflatex -halt-on-error $FILE
 
 if $CLEAR; then
-    echo $CLEAR ;
     erase_auxiliar
-fi
-
-if $SILENT; then
-    echo "Latex Compilation Success: Tex file was succesfully compiled."
-else
-    notify-send 'Latex Compilation Success' 'Tex file was succesfully compiled.'
 fi
